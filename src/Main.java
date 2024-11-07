@@ -311,17 +311,28 @@ public class Main {
                         return;
                     }
 
-                    System.out.print("Digite a data de entrada (dd/MM/yyyy): ");
-                    String dataEntradaStr = scanner.nextLine();
-                    LocalDate dataEntrada;
-                    try {
-                        dataEntrada = LocalDate.parse(dataEntradaStr, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    } catch (DateTimeParseException e) {
-                        System.out.println("Data inválida. Por favor, use o formato dd/MM/yyyy.");
+                    Quarto quarto = hotel.getQuarto(numeroQuarto);
+                    if (quarto == null) {
+                        System.out.println("Quarto não encontrado.");
                         return;
                     }
 
-                    sistemaReservas.realizarCheckIn(numeroQuarto, dataEntrada, hospede);
+                    if (!quarto.getStatus().equalsIgnoreCase("Aguardando check-in")) {
+                        System.out.println("Quarto não está disponível para check-in.");
+                        return;
+                    }
+
+                   
+                    quarto.setStatus("Ocupado"); 
+                    
+                   
+                    for (Reserva reserva : sistemaReservas.getReservas()) {
+                        if (reserva.getNumeroQuarto() == numeroQuarto && reserva.isAtiva()) {
+                            reserva.realizarCheckIn(); 
+                            System.out.println("Check-in realizado com sucesso no quarto " + numeroQuarto + " para o hóspede: " + hospede.getNome());
+                            break;
+                        }
+                    }
                 }
                 case 2 -> {
                     System.out.print("Digite o número do quarto: ");
@@ -337,11 +348,50 @@ public class Main {
                         return;
                     }
 
-                    sistemaReservas.realizarCheckOut(numeroQuarto, dataSaida);
+                    Quarto quarto = hotel.getQuarto(numeroQuarto);
+                    if (quarto == null) {
+                        System.out.println("Erro: Quarto número " + numeroQuarto + " não encontrado.");
+                        return;
+                    }
+
+                    if (!quarto.getStatus().equalsIgnoreCase("Ocupado")) {
+                        System.out.println("Check-out falhou: O quarto não está ocupado.");
+                        return;
+                    }
+
+                    
+                    boolean reservaEncontrada = false;
+                    for (Reserva reserva : sistemaReservas.getReservas()) {
+                        if (reserva.getNumeroQuarto() == numeroQuarto && reserva.isAtiva()) {
+                            reserva.setAtiva(false);
+                            reservaEncontrada = true;
+
+                            
+                            long diasEstadia = java.time.temporal.ChronoUnit.DAYS.between(reserva.getDataEntrada(), dataSaida);
+                            if (diasEstadia < 0) {
+                                System.out.println("Erro: A data de saída é anterior à data de entrada.");
+                                return;
+                            }
+
+                            double valorTotal = diasEstadia * quarto.getPreco();
+                            System.out.println("Check-out realizado com sucesso para o quarto " + numeroQuarto);
+                            System.out.println("Total de dias: " + diasEstadia + ", Valor total: R$ " + valorTotal);
+                            break;
+                        }
+                    }
+
+                    if (!reservaEncontrada) {
+                        System.out.println("Erro: Reserva ativa não encontrada para o quarto " + numeroQuarto);
+                    } else {
+                        quarto.setStatus("Disponível"); 
+                    }
                 }
                 case 0 -> back = true;
                 default -> System.out.println("Opção inválida.");
             }
         }
     }
+
+
+
 }

@@ -9,45 +9,14 @@ public class SistemaReservas {
     private List<Funcionario> funcionarios;
 
     public SistemaReservas() {
-        reservas = new ArrayList<>();
-        quartos = new ArrayList<>();
-        hospedes = new ArrayList<>();
-        funcionarios = new ArrayList<>();
+        this.reservas = new ArrayList<>();
+        this.quartos = new ArrayList<>();
+        this.hospedes = new ArrayList<>();
+        this.funcionarios = new ArrayList<>();
     }
 
-    
-    private String normalizarCpf(String cpf) {
-        return cpf.replace(".", "").replace("-", "");
-    }
-
-    public Hospede buscarHospedePorCpf(String cpf) {
-        String cpfNormalizado = normalizarCpf(cpf);
-        for (Hospede hospede : hospedes) {
-            if (normalizarCpf(hospede.getCpf()).equals(cpfNormalizado)) {
-                return hospede;
-            }
-        }
-        System.out.println("Hóspede não encontrado.");
-        return null;
-    }
-
-    public Funcionario buscarFuncionarioPorCpf(String cpf) {
-        String cpfNormalizado = normalizarCpf(cpf);
-        for (Funcionario funcionario : funcionarios) {
-            if (normalizarCpf(funcionario.getCpf()).equals(cpfNormalizado)) {
-                return funcionario;
-            }
-        }
-        System.out.println("Funcionário não encontrado.");
-        return null;
-    }
-
-    public void adicionarHospede(Hospede hospede) {
-        hospedes.add(hospede);
-    }
-
-    public void adicionarFuncionario(Funcionario funcionario) {
-        funcionarios.add(funcionario);
+    public List<Reserva> getReservas() {
+        return reservas;
     }
 
     public void adicionarQuarto(Quarto quarto) {
@@ -80,7 +49,7 @@ public class SistemaReservas {
             novaReserva.setAtiva(true);
             reservas.add(novaReserva);
             hospede.adicionarEstadia(new Estadia(quarto.getNumeroQuarto(), dataEntrada, dataSaida));
-            quarto.setStatus("Aguardando check-in"); 
+            quarto.setStatus("Aguardando check-in"); // Altera o status do quarto para "Aguardando check-in"
             System.out.println("Reserva criada com sucesso para o quarto " + quarto.getNumeroQuarto());
         } else {
             System.out.println("Erro: Quarto " + quarto.getNumeroQuarto() + " não disponível para o período selecionado.");
@@ -112,60 +81,48 @@ public class SistemaReservas {
         System.out.println("Reservas Ativas:");
         for (Reserva reserva : reservas) {
             if (reserva.isAtiva()) {
-                String statusReserva = reserva.getStatus();
-                System.out.println("Reserva no Quarto: " + reserva.getNumeroQuarto() + 
-                                   ", Hóspede: " + reserva.getHospede().getNome() + 
-                                   ", CPF: " + reserva.getHospede().getCpf() + 
-                                   ", Status da Reserva: " + statusReserva + 
-                                   ", Entrada: " + reserva.getDataEntrada() + 
+                System.out.println("Reserva no Quarto: " + reserva.getNumeroQuarto() +
+                                   ", Hóspede: " + reserva.getHospede().getNome() +
+                                   ", CPF: " + reserva.getHospede().getCpf() +
+                                   ", Status da Reserva: " + reserva.getStatus() +
+                                   ", Entrada: " + reserva.getDataEntrada() +
                                    ", Saída: " + reserva.getDataSaida());
             }
         }
     }
 
-    public void realizarCheckIn(int numeroQuarto, LocalDate entrada, Hospede hospede) {
-        Quarto quarto = getQuarto(numeroQuarto);
-        
-        if (quarto == null) {
-            System.out.println("Check-in falhou: quarto " + numeroQuarto + " não encontrado.");
-            return;
-        }
 
-        if (!quarto.getStatus().equals("Aguardando check-in")) {
-            System.out.println("Check-in falhou: o quarto " + numeroQuarto + " não está Aguardando check-in.");
-            return;
-        }
-
-        Reserva reservaCorrespondente = null;
-        for (Reserva reserva : reservas) {
-            if (reserva.getNumeroQuarto() == numeroQuarto && reserva.isAtiva() && reserva.getHospede().equals(hospede)) {
-                reservaCorrespondente = reserva;
-                break;
+    public Hospede buscarHospedePorCpf(String cpf) {
+        String cpfNormalizado = normalizarCpf(cpf);
+        for (Hospede hospede : hospedes) {
+            if (normalizarCpf(hospede.getCpf()).equals(cpfNormalizado)) {
+                return hospede;
             }
         }
-
-        if (reservaCorrespondente == null) {
-            System.out.println("Erro: Reserva não encontrada para o hóspede com CPF: " + hospede.getCpf() + " e quarto " + numeroQuarto);
-            return;
-        }
-
-        reservaCorrespondente.realizarCheckIn();
-        quarto.setStatus("Ocupado");
-        System.out.println("Check-in realizado com sucesso no quarto " + numeroQuarto + " para o hóspede: " + hospede.getNome());
+        System.out.println("Hóspede não encontrado.");
+        return null;
     }
 
-    public void realizarCheckOut(int numeroQuarto, LocalDate saida) {
-        for (Reserva reserva : reservas) {
-            if (reserva.getNumeroQuarto() == numeroQuarto && reserva.isAtiva()) {
-                reserva.setAtiva(false); 
-                getQuarto(numeroQuarto).setStatus("Disponível");
-                long diasEstadia = java.time.temporal.ChronoUnit.DAYS.between(reserva.getDataEntrada(), saida);
-                double valorTotal = diasEstadia * getQuarto(numeroQuarto).getPreco();
-                System.out.println("Check-out realizado com sucesso para o quarto " + numeroQuarto);
-                System.out.println("Total de dias: " + diasEstadia + ", Valor total: R$ " + valorTotal);
-                return;
+    private String normalizarCpf(String cpf) {
+        return cpf.replace(".", "").replace("-", "");
+    }
+
+    public Funcionario buscarFuncionarioPorCpf(String cpf) {
+        String cpfNormalizado = normalizarCpf(cpf);
+        for (Funcionario funcionario : funcionarios) {
+            if (normalizarCpf(funcionario.getCpf()).equals(cpfNormalizado)) {
+                return funcionario;
             }
         }
-        System.out.println("Check-out falhou: reserva não encontrada ou quarto já disponível.");
+        System.out.println("Funcionário não encontrado.");
+        return null;
+    }
+
+    public void adicionarHospede(Hospede hospede) {
+        hospedes.add(hospede);
+    }
+
+    public void adicionarFuncionario(Funcionario funcionario) {
+        funcionarios.add(funcionario);
     }
 }
